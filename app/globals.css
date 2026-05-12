@@ -1,0 +1,30 @@
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-bg text-ink font-body;
+  }
+}
+
+@layer components {
+  .input-base {
+    @apply w-full px-3 py-2.5 rounded-[8px] border border-rule bg-bg font-body text-sm text-ink outline-none transition-colors focus:border-accent placeholder:text-muted;
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-body border border-rule bg-paper text-muted cursor-pointer whitespace-nowrap transition-opacity hover:opacity-80;
+  }
+
+  .btn-primary {
+    @apply flex items-center justify-center gap-2 px-5 py-3 rounded-[12px] bg-accent text-white font-body text-sm font-semibold cursor-pointer border-none transition-opacity hover:opacity-90;
+    box-shadow: 0 4px 14px rgba(232, 158, 92, 0.4);
+  }
+
+  .btn-dark {
+    @apply flex items-center justify-center gap-2 px-4 py-2.5 rounded-[10px] bg-ink text-bg font-body text-sm font-medium cursor-pointer border-none transition-opacity hover:opacity-90;
+  }
+}

@@ -1,0 +1,33 @@
+import { ChevronLeft } from 'lucide-react'
+import Link from 'next/link'
+import { NovaVendaForm } from '@/components/brecho/nova-venda-form'
+import { getCompradoras } from '@/lib/store'
+
+export const dynamic = 'force-dynamic'
+
+export default function NovaVendaPage() {
+  const compradoras = getCompradoras()
+
+  return (
+    <div className="px-14 py-10 max-w-[1000px]">
+      <div className="mb-8">
+        <Link
+          href="/brecho"
+          className="flex items-center gap-1 text-muted text-[13px] font-body no-underline hover:text-ink transition-colors w-fit"
+        >
+          <ChevronLeft size={14} /> Voltar
+        </Link>
+      </div>
+
+      <h1 className="font-display text-[40px] text-ink font-semibold tracking-[-1px] m-0 mb-2">
+        Nova venda
+      </h1>
+      <p className="font-body text-muted text-sm mb-9 mt-2">
+        Preencha os dados da compra. Os campos com{' '}
+        <span className="text-accent">*</span> são obrigatórios.
+      </p>
+
+      <NovaVendaForm compradoras={compradoras} />
+    </div>
+  )
+}

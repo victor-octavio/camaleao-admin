@@ -1,0 +1,105 @@
+'use client'
+
+import { useState } from 'react'
+import { Search } from 'lucide-react'
+import { Tag } from '@/components/ui/tag'
+import type { Compradora } from '@/types'
+
+interface CompradoresListProps {
+  compradoras: Compradora[]
+  selected: Compradora | null
+  onSelect: (c: Compradora) => void
+}
+
+const etiquetasFiltro = ['todas', 'paciente', 'familiar', 'voluntária', 'brechó', 'tampinha']
+
+export function CompradoresList({
+  compradoras,
+  selected,
+  onSelect,
+}: CompradoresListProps) {
+  const [busca, setBusca] = useState('')
+  const [filtro, setFiltro] = useState('todas')
+
+  const filtered = compradoras.filter((c) => {
+    const matchBusca =
+      c.nome.toLowerCase().includes(busca.toLowerCase()) ||
+      c.tel.includes(busca)
+    const matchFiltro =
+      filtro === 'todas' || c.etiquetas.includes(filtro)
+    return matchBusca && matchFiltro
+  })
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex gap-2 flex-wrap items-center">
+        <span className="text-xs text-muted font-body">Filtrar:</span>
+        {etiquetasFiltro.map((t) => (
+          <button
+            key={t}
+            onClick={() => setFiltro(t)}
+            className={`chip transition-colors ${
+              filtro === t
+                ? 'bg-ink text-bg border-ink'
+                : 'bg-paper text-muted border-rule'
+            }`}
+          >
+            {t}
+          </button>
+        ))}
+      </div>
+
+      <div className="bg-paper border border-rule rounded-[16px] overflow-hidden">
+        <div className="p-4 border-b border-rule relative">
+          <Search
+            size={14}
+            className="absolute left-7 top-[27px] text-muted pointer-events-none"
+          />
+          <input
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+            placeholder="Buscar compradora..."
+            className="input-base pl-9"
+          />
+        </div>
+        <div>
+          {filtered.map((c, i) => {
+            const active = selected?.id === c.id
+            return (
+              <div
+                key={c.id}
+                onClick={() => onSelect(c)}
+                className={`px-5 py-4 cursor-pointer transition-colors border-l-[3px] ${
+                  i < filtered.length - 1 ? 'border-b border-rule' : ''
+                } ${
+                  active
+                    ? 'bg-bg border-l-accent'
+                    : 'border-l-transparent hover:bg-bg/60'
+                }`}
+              >
+                <div className="flex justify-between items-start mb-1.5">
+                  <span className="font-body text-sm text-ink font-medium">
+                    {c.nome}
+                  </span>
+                  <span className="font-display text-[15px] text-ink">
+                    R$ {c.valorTotal}
+                  </span>
+                </div>
+                <div className="flex gap-1 flex-wrap">
+                  {c.etiquetas.map((et) => (
+                    <Tag key={et}>{et}</Tag>
+                  ))}
+                </div>
+              </div>
+            )
+          })}
+          {filtered.length === 0 && (
+            <div className="px-5 py-8 text-center text-sm text-muted font-body">
+              Nenhuma compradora encontrada
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
