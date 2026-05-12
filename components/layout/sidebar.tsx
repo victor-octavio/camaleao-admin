@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { ShoppingBag, TrendingUp, LogOut } from 'lucide-react'
+import { ShoppingBag, TrendingUp, LogOut, X } from 'lucide-react'
 
 const topNav = [
   { href: '/brecho', label: 'Brechó', icon: ShoppingBag },
@@ -17,12 +17,32 @@ const brechoSub = [
   { href: '/brecho/financeiro', label: 'Financeiro' },
 ]
 
-export function Sidebar() {
+interface SidebarProps {
+  isOpen?: boolean
+  onClose?: () => void
+}
+
+export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname()
   const inBrecho = pathname.startsWith('/brecho')
 
   return (
-    <aside className="w-[240px] bg-paper border-r border-rule px-5 py-8 flex flex-col h-screen sticky top-0 shrink-0">
+    <aside
+      className={`
+        fixed left-0 top-0 h-screen z-50 transition-transform duration-200
+        ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+        md:sticky md:translate-x-0 md:z-auto
+        w-[240px] bg-paper border-r border-rule px-5 py-8 flex flex-col shrink-0
+      `}
+    >
+      {/* Fechar (mobile) */}
+      <button
+        onClick={onClose}
+        className="md:hidden absolute top-4 right-4 text-muted hover:text-ink transition-colors"
+      >
+        <X size={18} />
+      </button>
+
       {/* Logo */}
       <div className="mb-12 flex justify-center">
         <Image

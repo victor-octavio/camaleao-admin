@@ -79,7 +79,7 @@ export function NovaVendaForm({ compradoras: inicial }: NovaVendaFormProps) {
         />
       )}
 
-      <div className="grid gap-6" style={{ gridTemplateColumns: '1.6fr 1fr' }}>
+      <div className="grid gap-6 grid-cols-1 md:grid-cols-[1.6fr_1fr]">
         {/* Formulário */}
         <div className="flex flex-col gap-5">
 
@@ -215,7 +215,7 @@ export function NovaVendaForm({ compradoras: inicial }: NovaVendaFormProps) {
             <label className="block text-[11px] font-body text-muted tracking-[1px] uppercase mb-3">
               Forma de pagamento <span className="text-accent">*</span>
             </label>
-            <div className="grid grid-cols-4 gap-2.5">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
               {formasPagamento.map(({ id, label, icon: Icon, color }) => {
                 const active = pagamento === id
                 return (
@@ -277,7 +277,7 @@ export function NovaVendaForm({ compradoras: inicial }: NovaVendaFormProps) {
         </div>
 
         {/* Resumo sticky */}
-        <div className="sticky top-6 self-start">
+        <div className="md:sticky md:top-6 md:self-start">
           <div className="bg-paper border border-rule rounded-[16px] p-6">
             <div className="text-[11px] text-muted tracking-[2px] uppercase font-body mb-4">
               Resumo

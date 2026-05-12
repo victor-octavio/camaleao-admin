@@ -31,21 +31,21 @@ export function CompradoresPageClient({ compradoras: inicial }: CompradoresPageC
         />
       )}
 
-      <header className="mb-9 flex justify-between items-end">
+      <header className="mb-6 md:mb-9 flex flex-col gap-4 md:flex-row md:justify-between md:items-end">
         <div>
-          <h1 className="font-display text-[40px] text-ink font-semibold tracking-[-1px] m-0">
+          <h1 className="font-display text-[28px] md:text-[40px] text-ink font-semibold tracking-[-1px] m-0">
             Compradoras
           </h1>
           <p className="font-body text-muted text-sm mt-2 m-0">
             {lista.length} pessoas cadastradas · histórico, etiquetas e perfis
           </p>
         </div>
-        <button onClick={() => setShowModal(true)} className="btn-dark">
+        <button onClick={() => setShowModal(true)} className="btn-dark self-start md:self-auto">
           <Plus size={14} /> Nova compradora
         </button>
       </header>
 
-      <div className="grid gap-5" style={{ gridTemplateColumns: '1fr 1.2fr' }}>
+      <div className="grid gap-5 grid-cols-1 md:grid-cols-[1fr_1.2fr]">
         <CompradoresList
           compradoras={lista}
           selected={selected}

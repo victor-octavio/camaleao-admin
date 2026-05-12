@@ -24,7 +24,7 @@ export function FinanceiroTable({ vendas }: FinanceiroTableProps) {
   return (
     <div className="flex flex-col gap-8">
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-paper border border-rule rounded-[16px] p-6">
           <div className="text-[13px] text-muted font-body mb-2 tracking-wide">
             Valor bruto · mês
@@ -53,7 +53,7 @@ export function FinanceiroTable({ vendas }: FinanceiroTableProps) {
 
       {/* Tabela */}
       <div className="bg-paper border border-rule rounded-[16px] overflow-hidden">
-        <div className="px-6 py-5 border-b border-rule flex justify-between items-center">
+        <div className="px-4 md:px-6 py-5 border-b border-rule flex justify-between items-center">
           <h3 className="font-display text-xl text-ink font-medium m-0">
             Vendas para conciliar
           </h3>
@@ -64,7 +64,8 @@ export function FinanceiroTable({ vendas }: FinanceiroTableProps) {
             <button className="chip bg-bg">Exportar</button>
           </div>
         </div>
-        <table className="w-full border-collapse font-body">
+        <div className="overflow-x-auto">
+        <table className="w-full border-collapse font-body min-w-[560px]">
           <thead>
             <tr className="bg-bg">
               {['Data', 'Compradora', 'Bruto', 'Líquido', 'Banco', 'Status'].map(
@@ -122,6 +123,7 @@ export function FinanceiroTable({ vendas }: FinanceiroTableProps) {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   )

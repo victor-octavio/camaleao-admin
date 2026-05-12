@@ -16,9 +16,9 @@ export default function BrechoDashboard() {
   const saudacao = hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite'
 
   return (
-    <div className="px-14 py-10 max-w-[1200px]">
+    <div className="px-4 py-6 md:px-14 md:py-10 max-w-[1200px]">
       {/* Header editorial */}
-      <header className="mb-12 flex justify-between items-end">
+      <header className="mb-8 md:mb-12 flex flex-col gap-4 md:flex-row md:justify-between md:items-end">
         <div>
           <div className="text-xs text-muted font-body tracking-[2px] uppercase mb-2">
             {now.toLocaleDateString('pt-BR', {
@@ -27,22 +27,22 @@ export default function BrechoDashboard() {
               month: 'long',
             })}
           </div>
-          <h1 className="font-display text-[48px] text-ink font-semibold tracking-[-1.5px] m-0 leading-[1.05]">
+          <h1 className="font-display text-[32px] md:text-[48px] text-ink font-semibold tracking-[-1px] md:tracking-[-1.5px] m-0 leading-[1.05]">
             {saudacao},{' '}
             <span className="text-accent-deep">Ana</span>.
           </h1>
-          <p className="font-body text-muted text-[15px] mt-3 max-w-[480px]">
+          <p className="font-body text-muted text-[14px] md:text-[15px] mt-3 max-w-[480px]">
             Cada peça que sai daqui vira atendimento, escuta e cuidado. Obrigada
             por estar aqui hoje.
           </p>
         </div>
-        <Link href="/brecho/nova-venda" className="btn-primary">
+        <Link href="/brecho/nova-venda" className="btn-primary self-start md:self-auto">
           <Plus size={16} /> Registrar venda
         </Link>
       </header>
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-4 mb-10">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 md:mb-10">
         <Card>
           <StatNumber
             value={`R$ ${totalDia.toFixed(2)}`}
@@ -63,7 +63,7 @@ export default function BrechoDashboard() {
       </div>
 
       {/* Duas colunas */}
-      <div className="grid gap-4" style={{ gridTemplateColumns: '1.4fr 1fr' }}>
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-[1.4fr_1fr]">
         <VendasDoDia vendas={vendas} />
 
         <div className="flex flex-col gap-4">

@@ -9,7 +9,7 @@ export default function NovaVendaPage() {
   const compradoras = getCompradoras()
 
   return (
-    <div className="px-14 py-10 max-w-[1000px]">
+    <div className="px-4 py-6 md:px-14 md:py-10 max-w-[1000px]">
       <div className="mb-8">
         <Link
           href="/brecho"
@@ -19,7 +19,7 @@ export default function NovaVendaPage() {
         </Link>
       </div>
 
-      <h1 className="font-display text-[40px] text-ink font-semibold tracking-[-1px] m-0 mb-2">
+      <h1 className="font-display text-[28px] md:text-[40px] text-ink font-semibold tracking-[-1px] m-0 mb-2">
         Nova venda
       </h1>
       <p className="font-body text-muted text-sm mb-9 mt-2">

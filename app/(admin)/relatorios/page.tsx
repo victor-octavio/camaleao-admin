@@ -26,12 +26,12 @@ const topCompradoras = [
 
 export default function RelatoriosPage() {
   return (
-    <div className="px-14 py-10 max-w-[1200px]">
+    <div className="px-4 py-6 md:px-14 md:py-10 max-w-[1200px]">
       <header className="mb-9">
         <div className="text-xs text-muted font-body tracking-[2px] uppercase mb-2">
           Relatórios · 2026
         </div>
-        <h1 className="font-display text-[40px] text-ink font-semibold tracking-[-1px] m-0">
+        <h1 className="font-display text-[28px] md:text-[40px] text-ink font-semibold tracking-[-1px] m-0">
           Visão consolidada
         </h1>
         <p className="font-body text-muted text-sm mt-2 max-w-[480px]">
@@ -44,7 +44,7 @@ export default function RelatoriosPage() {
         <h2 className="font-body text-[11px] text-muted tracking-[2px] uppercase mb-4">
           Instituto · resumo anual
         </h2>
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Card>
             <div className="text-accent mb-3">
               <ShoppingBag size={20} />
@@ -146,7 +146,7 @@ export default function RelatoriosPage() {
         <h2 className="font-body text-[11px] text-muted tracking-[2px] uppercase mb-4">
           Formas de pagamento · maio
         </h2>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Card>
             <h4 className="font-body text-[11px] text-muted tracking-[1.5px] uppercase mb-5 m-0">
               Distribuição por canal
