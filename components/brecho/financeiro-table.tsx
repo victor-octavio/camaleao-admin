@@ -1,7 +1,7 @@
 'use client'
 
 import { useTransition } from 'react'
-import { Check, Filter } from 'lucide-react'
+import { Check, Filter, Download } from 'lucide-react'
 import { Tag } from '@/components/ui/tag'
 import { conferirVenda } from '@/actions/vendas'
 import type { Venda } from '@/types'
@@ -15,6 +15,34 @@ export function FinanceiroTable({ vendas }: FinanceiroTableProps) {
 
   function handleConferir(id: string) {
     startTransition(() => conferirVenda(id))
+  }
+
+  function handleExport() {
+    const header = ['Data', 'Hora', 'Compradora', 'Categoria', 'Bruto (R$)', 'Líquido (R$)', 'Pagamento', 'Banco', 'Parcelas', 'Conferido']
+    const rows = vendas.map((v) => [
+      new Date(v.created_at).toLocaleDateString('pt-BR'),
+      v.hora,
+      v.compradora_nome,
+      v.categoria,
+      v.valor.toFixed(2),
+      (v.liquido ?? v.valor).toFixed(2),
+      v.pagamento,
+      v.banco ?? '',
+      v.parcelas ?? '',
+      v.conferido ? 'Sim' : 'Não',
+    ])
+
+    const csv = [header, ...rows]
+      .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+      .join('\n')
+
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `vendas-camaleao-${new Date().toISOString().split('T')[0]}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
   }
 
   const totalBruto = vendas.reduce((s, v) => s + v.valor, 0)
@@ -61,7 +89,9 @@ export function FinanceiroTable({ vendas }: FinanceiroTableProps) {
             <button className="chip bg-bg">
               <Filter size={11} /> Filtros
             </button>
-            <button className="chip bg-bg">Exportar</button>
+            <button onClick={handleExport} className="chip bg-bg">
+              <Download size={11} /> Exportar CSV
+            </button>
           </div>
         </div>
         <div className="overflow-x-auto">

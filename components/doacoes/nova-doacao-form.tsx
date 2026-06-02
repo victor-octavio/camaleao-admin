@@ -1,0 +1,177 @@
+'use client'
+
+import { useState, useTransition } from 'react'
+import { Check } from 'lucide-react'
+import { registrarDoacao } from '@/actions/doacoes'
+
+const origens = ['PIX', 'Dinheiro', 'Site', 'Transferência', 'Outro']
+
+export function NovaDoacaoForm() {
+  const [isPending, startTransition] = useTransition()
+  const [frequencia, setFrequencia] = useState<'mensal' | 'pontual'>('pontual')
+  const hoje = new Date().toISOString().split('T')[0]
+  const [data, setData] = useState(hoje)
+
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const fd = new FormData(e.currentTarget)
+    fd.set('frequencia', frequencia)
+    fd.set('data_doacao', data)
+    startTransition(async () => {
+      await registrarDoacao(fd)
+    })
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <div className="grid gap-6 grid-cols-1 md:grid-cols-[1.6fr_1fr]">
+        <div className="flex flex-col gap-5">
+
+          {/* Doador */}
+          <div className="bg-paper border border-rule rounded-[16px] p-6">
+            <div className="text-[11px] font-body text-muted tracking-[1px] uppercase mb-4">
+              Doador
+            </div>
+            <div className="flex flex-col gap-3">
+              <div>
+                <label className="block text-[11px] font-body text-muted tracking-[1px] uppercase mb-1.5">
+                  Nome <span className="text-accent">*</span>
+                </label>
+                <input
+                  name="doador_nome"
+                  required
+                  placeholder="Nome completo"
+                  className="input-base"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-body text-muted tracking-[1px] uppercase mb-1.5">
+                  Telefone
+                </label>
+                <input
+                  name="doador_tel"
+                  placeholder="(51) 99999-9999"
+                  className="input-base"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Dados da doação */}
+          <div className="bg-paper border border-rule rounded-[16px] p-6">
+            <div className="text-[11px] font-body text-muted tracking-[1px] uppercase mb-4">
+              Dados da doação
+            </div>
+            <div className="flex flex-col gap-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-body text-muted tracking-[1px] uppercase mb-1.5">
+                    Data <span className="text-accent">*</span>
+                  </label>
+                  <input
+                    type="date"
+                    value={data}
+                    max={hoje}
+                    onChange={(e) => setData(e.target.value)}
+                    className="input-base"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-body text-muted tracking-[1px] uppercase mb-1.5">
+                    Valor (R$) <span className="text-accent">*</span>
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-2.5 text-muted text-[13px] font-body pointer-events-none">
+                      R$
+                    </span>
+                    <input
+                      name="valor"
+                      required
+                      placeholder="0,00"
+                      type="number"
+                      min="0.01"
+                      step="0.01"
+                      className="input-base pl-8"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-body text-muted tracking-[1px] uppercase mb-1.5">
+                  Origem <span className="text-accent">*</span>
+                </label>
+                <select name="origem" required className="input-base">
+                  {origens.map((o) => <option key={o}>{o}</option>)}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-body text-muted tracking-[1px] uppercase mb-2">
+                  Frequência
+                </label>
+                <div className="flex gap-2">
+                  {(['pontual', 'mensal'] as const).map((f) => (
+                    <button
+                      key={f}
+                      type="button"
+                      onClick={() => setFrequencia(f)}
+                      className="px-4 py-2 rounded-[8px] text-[13px] font-body capitalize transition-all"
+                      style={
+                        frequencia === f
+                          ? { border: '2px solid #5C8A6E', backgroundColor: '#5C8A6E15', color: '#2E5C3E', fontWeight: 500 }
+                          : { border: '1px solid #EEE4D5', backgroundColor: '#FFFFFF', color: '#7A6E8A' }
+                      }
+                    >
+                      {f}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-body text-muted tracking-[1px] uppercase mb-1.5">
+                  Observações
+                </label>
+                <textarea
+                  name="observacoes"
+                  rows={3}
+                  placeholder="Contexto sobre a doação ou doador..."
+                  className="input-base resize-none"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Resumo sticky */}
+        <div className="md:sticky md:top-6 md:self-start">
+          <div className="bg-paper border border-rule rounded-[16px] p-6">
+            <div className="text-[11px] text-muted tracking-[2px] uppercase font-body mb-4">
+              Resumo
+            </div>
+            <div className="text-[13px] font-body text-muted mb-1">Frequência</div>
+            <div className="text-sm font-body text-ink font-medium capitalize mb-5">{frequencia}</div>
+            <div className="border-t border-rule pt-4 mb-6">
+              <div className="text-[11px] text-muted tracking-[1.5px] uppercase font-body mb-1.5">
+                Categoria
+              </div>
+              <div className="font-display text-[28px] font-bold tracking-[-1px] leading-none text-emerald">
+                Doação · Dinheiro
+              </div>
+            </div>
+            <button
+              type="submit"
+              disabled={isPending}
+              className="w-full bg-emerald text-white border-none py-3.5 rounded-[10px] cursor-pointer font-body text-sm font-medium flex items-center justify-center gap-2 transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ boxShadow: '0 4px 14px rgba(92,138,110,0.35)' }}
+            >
+              <Check size={16} />
+              {isPending ? 'Registrando...' : 'Registrar doação'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </form>
+  )
+}

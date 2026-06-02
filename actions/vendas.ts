@@ -17,6 +17,7 @@ export async function registrarVenda(formData: FormData) {
     pagamento: formData.get('pagamento') as string,
     banco: (formData.get('banco') as string) || undefined,
     parcelas: formData.get('parcelas') ? Number(formData.get('parcelas')) : undefined,
+    data_venda: (formData.get('data_venda') as string) || undefined,
     conferido: false,
   })
 

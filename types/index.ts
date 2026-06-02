@@ -30,3 +30,15 @@ export interface PecaVenda {
   categoria: string
   valor: number
 }
+
+export interface DoacaoDinheiro {
+  id: string
+  data_doacao: string
+  doador_nome: string
+  doador_tel: string
+  valor: number
+  origem: string
+  frequencia: 'mensal' | 'pontual'
+  observacoes?: string
+  created_at: string
+}

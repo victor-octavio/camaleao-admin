@@ -22,6 +22,7 @@ export function NovaVendaForm({ compradoras: inicial }: NovaVendaFormProps) {
   const [listaCompradoras, setListaCompradoras] = useState<Compradora[]>(inicial)
   const [pagamento, setPagamento] = useState('pix')
   const [pecas, setPecas] = useState([{ categoria: '', valor: '' }])
+  const [dataVenda, setDataVenda] = useState(new Date().toISOString().split('T')[0])
   const [busca, setBusca] = useState('')
   const [compradoraSelecionada, setCompradoraSelecionada] = useState<Compradora | null>(null)
   const [showDropdown, setShowDropdown] = useState(false)
@@ -64,6 +65,7 @@ export function NovaVendaForm({ compradoras: inicial }: NovaVendaFormProps) {
     }
     fd.set('pecas', JSON.stringify(pecas.map((p) => ({ ...p, valor: parseFloat(p.valor) || 0 }))))
     fd.set('pagamento', pagamento)
+    fd.set('data_venda', dataVenda)
 
     startTransition(async () => {
       await registrarVenda(fd)
@@ -158,6 +160,25 @@ export function NovaVendaForm({ compradoras: inicial }: NovaVendaFormProps) {
                 Cliente avulso
               </button>
             </div>
+          </div>
+
+          {/* Data */}
+          <div className="bg-paper border border-rule rounded-[16px] p-6">
+            <label className="block text-[11px] font-body text-muted tracking-[1px] uppercase mb-3">
+              Data da venda
+            </label>
+            <input
+              type="date"
+              value={dataVenda}
+              max={new Date().toISOString().split('T')[0]}
+              onChange={(e) => setDataVenda(e.target.value)}
+              className="input-base"
+            />
+            {dataVenda !== new Date().toISOString().split('T')[0] && (
+              <p className="text-[12px] text-muted font-body mt-2">
+                Registrando com data retroativa
+              </p>
+            )}
           </div>
 
           {/* Peças */}

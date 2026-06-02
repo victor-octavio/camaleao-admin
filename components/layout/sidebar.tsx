@@ -3,10 +3,11 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { ShoppingBag, TrendingUp, LogOut, X } from 'lucide-react'
+import { ShoppingBag, TrendingUp, LogOut, X, Heart } from 'lucide-react'
 
 const topNav = [
   { href: '/brecho', label: 'Brechó', icon: ShoppingBag },
+  { href: '/doacoes', label: 'Doações', icon: Heart },
   { href: '/relatorios', label: 'Relatórios', icon: TrendingUp },
 ]
 
@@ -17,6 +18,10 @@ const brechoSub = [
   { href: '/brecho/financeiro', label: 'Financeiro' },
 ]
 
+const doacoesSub = [
+  { href: '/doacoes/dinheiro', label: 'Dinheiro' },
+]
+
 interface SidebarProps {
   isOpen?: boolean
   onClose?: () => void
@@ -25,6 +30,7 @@ interface SidebarProps {
 export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname()
   const inBrecho = pathname.startsWith('/brecho')
+  const inDoacoes = pathname.startsWith('/doacoes')
 
   return (
     <aside
@@ -65,11 +71,18 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
             const active =
               href === '/brecho'
                 ? pathname.startsWith('/brecho')
+                : href === '/doacoes'
+                ? pathname.startsWith('/doacoes')
                 : pathname.startsWith(href)
+            const sub = href === '/brecho' && inBrecho
+              ? brechoSub
+              : href === '/doacoes' && inDoacoes
+              ? doacoesSub
+              : null
             return (
               <div key={href}>
                 <Link
-                  href={href}
+                  href={href === '/doacoes' ? '/doacoes/dinheiro' : href}
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-[10px] font-body text-sm no-underline transition-colors ${
                     active
                       ? 'bg-bg text-ink font-medium'
@@ -80,14 +93,13 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
                   {label}
                 </Link>
 
-                {/* Sub-nav do Brechó */}
-                {href === '/brecho' && inBrecho && (
+                {sub && (
                   <div className="ml-8 mt-0.5 mb-1 flex flex-col gap-0.5 border-l border-rule pl-3">
-                    {brechoSub.map(({ href: subHref, label: subLabel }) => {
+                    {sub.map(({ href: subHref, label: subLabel }) => {
                       const subActive =
                         subHref === '/brecho'
                           ? pathname === '/brecho'
-                          : pathname === subHref
+                          : pathname.startsWith(subHref)
                       return (
                         <Link
                           key={subHref}

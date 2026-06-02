@@ -1,4 +1,4 @@
-import type { Compradora, Venda } from '@/types'
+import type { Compradora, Venda, DoacaoDinheiro } from '@/types'
 
 // Módulo cacheado pelo Node.js — estado persiste entre requests (reseta ao reiniciar o servidor)
 
@@ -151,18 +151,17 @@ export function addCompradora(
 }
 
 export function addVenda(
-  dados: Omit<Venda, 'id' | 'created_at' | 'liquido' | 'hora'>
+  dados: Omit<Venda, 'id' | 'created_at' | 'liquido' | 'hora'> & { data_venda?: string }
 ): Venda {
-  const hora = new Date().toLocaleTimeString('pt-BR', {
-    hour: '2-digit',
-    minute: '2-digit',
-  })
+  const agora = dados.data_venda ? new Date(dados.data_venda) : new Date()
+  const hora = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+  const { data_venda: _, ...rest } = dados
   const nova: Venda = {
-    ...dados,
+    ...rest,
     id: `v${nextId()}`,
     hora,
     liquido: calcularLiquido(dados.valor, dados.pagamento),
-    created_at: new Date().toISOString(),
+    created_at: agora.toISOString(),
   }
   _vendas.push(nova)
 
@@ -187,4 +186,60 @@ export function marcarConferido(id: string): void {
 export function atualizarEtiquetasStore(id: string, etiquetas: string[]): void {
   const comp = _compradoras.find((c) => c.id === id)
   if (comp) comp.etiquetas = etiquetas
+}
+
+// ────────────────────────────────────────────────────────────
+// Doações em dinheiro
+// ────────────────────────────────────────────────────────────
+
+const _doacoes: DoacaoDinheiro[] = [
+  {
+    id: 'd01',
+    data_doacao: '2026-05-05T00:00:00.000Z',
+    doador_nome: 'Cláudia Mendes',
+    doador_tel: '(51) 98111-2233',
+    valor: 100,
+    origem: 'PIX',
+    frequencia: 'mensal',
+    observacoes: 'Doa todo mês desde jan/2025',
+    created_at: '2026-05-05T00:00:00.000Z',
+  },
+  {
+    id: 'd02',
+    data_doacao: '2026-05-12T00:00:00.000Z',
+    doador_nome: 'Roberto Faria',
+    doador_tel: '(51) 97555-8844',
+    valor: 250,
+    origem: 'Dinheiro',
+    frequencia: 'pontual',
+    created_at: '2026-05-12T00:00:00.000Z',
+  },
+  {
+    id: 'd03',
+    data_doacao: '2026-05-20T00:00:00.000Z',
+    doador_nome: 'Beatriz Teixeira',
+    doador_tel: '(51) 99444-7766',
+    valor: 50,
+    origem: 'PIX',
+    frequencia: 'mensal',
+    created_at: '2026-05-20T00:00:00.000Z',
+  },
+]
+
+export function getDoacoes(): DoacaoDinheiro[] {
+  return [..._doacoes].sort(
+    (a, b) => new Date(b.data_doacao).getTime() - new Date(a.data_doacao).getTime()
+  )
+}
+
+export function addDoacao(
+  dados: Omit<DoacaoDinheiro, 'id' | 'created_at'>
+): DoacaoDinheiro {
+  const nova: DoacaoDinheiro = {
+    ...dados,
+    id: `d${nextId()}`,
+    created_at: new Date().toISOString(),
+  }
+  _doacoes.push(nova)
+  return nova
 }
