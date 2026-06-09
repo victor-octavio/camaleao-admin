@@ -1,44 +1,44 @@
-export interface Compradora {
+export interface Customer {
   id: string
-  nome: string
-  tel: string
-  etiquetas: string[]
-  aniversario: string
-  desde: number
-  totalCompras: number
-  valorTotal: number
-  ultimaCompra: string
+  name: string
+  phone: string
+  tags: string[]
+  birthday: string
+  member_since: number
+  purchase_count: number
+  total_spent: number
+  last_purchase_at: string
   created_at?: string
 }
 
-export interface Venda {
+export interface Sale {
   id: string
-  hora: string
-  compradora_id: string | null
-  compradora_nome: string
-  categoria: string
-  valor: number
-  pagamento: string
-  banco?: string
-  parcelas?: number
-  liquido?: number
-  conferido: boolean
+  time: string
+  customer_id: string | null
+  customer_name: string
+  category: string
+  amount: number
+  payment_method: string
+  bank?: string
+  installments?: number
+  net_amount?: number
+  confirmed: boolean
   created_at: string
 }
 
-export interface PecaVenda {
-  categoria: string
-  valor: number
+export interface SaleItem {
+  category: string
+  amount: number
 }
 
-export interface DoacaoDinheiro {
+export interface DonationCash {
   id: string
-  data_doacao: string
-  doador_nome: string
-  doador_tel: string
-  valor: number
-  origem: string
-  frequencia: 'mensal' | 'pontual'
-  observacoes?: string
+  donated_at: string
+  donor_name: string
+  donor_phone: string
+  amount: number
+  origin: string
+  frequency: 'monthly' | 'one_time'
+  notes?: string
   created_at: string
 }

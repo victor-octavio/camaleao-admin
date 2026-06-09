@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { ChevronLeft } from 'lucide-react'
-import { NovaDoacaoForm } from '@/components/doacoes/nova-doacao-form'
+import { NewDonationForm } from '@/components/donations/new-donation-form'
 
 export default function NovaDoacaoPage() {
   return (
@@ -22,7 +22,7 @@ export default function NovaDoacaoPage() {
         <span className="text-accent">*</span> são obrigatórios.
       </p>
 
-      <NovaDoacaoForm />
+      <NewDonationForm />
     </div>
   )
 }

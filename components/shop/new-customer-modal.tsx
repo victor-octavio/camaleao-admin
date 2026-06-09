@@ -2,12 +2,12 @@
 
 import { useEffect, useRef, useState, useTransition } from 'react'
 import { X, Check } from 'lucide-react'
-import { cadastrarCompradora } from '@/actions/compradoras'
-import type { Compradora } from '@/types'
+import { createCustomer } from '@/actions/customers'
+import type { Customer } from '@/types'
 
-const etiquetasDisponiveis = ['paciente', 'familiar', 'voluntária', 'brechó', 'tampinha']
+const availableTags = ['paciente', 'familiar', 'voluntária', 'brechó', 'tampinha']
 
-const etiquetaStyles: Record<string, { bg: string; color: string; border: string }> = {
+const tagStyles: Record<string, { bg: string; color: string; border: string }> = {
   paciente:   { bg: '#F8DCD2', color: '#D87560', border: '#D87560' },
   familiar:   { bg: '#E2DCF3', color: '#4B3A9B', border: '#4B3A9B' },
   voluntária: { bg: '#DCEBE0', color: '#5C8A6E', border: '#5C8A6E' },
@@ -15,19 +15,18 @@ const etiquetaStyles: Record<string, { bg: string; color: string; border: string
   tampinha:   { bg: '#FDE7E7', color: '#E25A8F', border: '#E25A8F' },
 }
 
-interface NovaCompradoraModalProps {
+interface NewCustomerModalProps {
   onClose: () => void
-  onCreated: (compradora: Compradora) => void
+  onCreated: (customer: Customer) => void
 }
 
-export function NovaCompradoraModal({ onClose, onCreated }: NovaCompradoraModalProps) {
-  const [etiquetas, setEtiquetas] = useState<string[]>([])
+export function NewCustomerModal({ onClose, onCreated }: NewCustomerModalProps) {
+  const [tags, setTags] = useState<string[]>([])
   const [isPending, startTransition] = useTransition()
-  const nomeRef = useRef<HTMLInputElement>(null)
+  const nameRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    nomeRef.current?.focus()
-
+    nameRef.current?.focus()
     function handleKey(e: KeyboardEvent) {
       if (e.key === 'Escape') onClose()
     }
@@ -35,20 +34,17 @@ export function NovaCompradoraModal({ onClose, onCreated }: NovaCompradoraModalP
     return () => window.removeEventListener('keydown', handleKey)
   }, [onClose])
 
-  function toggleEtiqueta(et: string) {
-    setEtiquetas((prev) =>
-      prev.includes(et) ? prev.filter((e) => e !== et) : [...prev, et]
-    )
+  function toggleTag(tag: string) {
+    setTags((prev) => prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag])
   }
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     const fd = new FormData(e.currentTarget)
-    fd.set('etiquetas', JSON.stringify(etiquetas))
-
+    fd.set('tags', JSON.stringify(tags))
     startTransition(async () => {
-      const nova = await cadastrarCompradora(fd)
-      onCreated(nova)
+      const customer = await createCustomer(fd)
+      onCreated(customer)
     })
   }
 
@@ -59,7 +55,6 @@ export function NovaCompradoraModal({ onClose, onCreated }: NovaCompradoraModalP
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div className="bg-paper rounded-[20px] w-full max-w-[440px] shadow-xl">
-        {/* Header */}
         <div className="flex items-center justify-between px-7 pt-7 pb-5 border-b border-rule">
           <div>
             <h2 className="font-display text-[22px] text-ink font-semibold tracking-[-0.4px] m-0">
@@ -77,74 +72,52 @@ export function NovaCompradoraModal({ onClose, onCreated }: NovaCompradoraModalP
           </button>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit} className="px-7 py-6 flex flex-col gap-5">
           <div>
             <label className="block text-[11px] font-body text-muted tracking-[1px] uppercase mb-1.5">
               Nome completo <span className="text-accent">*</span>
             </label>
-            <input
-              ref={nomeRef}
-              name="nome"
-              required
-              placeholder="Ex.: Roberta Lima"
-              className="input-base"
-            />
+            <input ref={nameRef} name="name" required placeholder="Ex.: Roberta Lima" className="input-base" />
           </div>
-
           <div>
             <label className="block text-[11px] font-body text-muted tracking-[1px] uppercase mb-1.5">
               Telefone
             </label>
-            <input
-              name="tel"
-              type="tel"
-              placeholder="(51) 99999-9999"
-              className="input-base"
-            />
+            <input name="phone" type="tel" placeholder="(51) 99999-9999" className="input-base" />
           </div>
-
           <div>
             <label className="block text-[11px] font-body text-muted tracking-[1px] uppercase mb-1.5">
               Aniversário
             </label>
-            <input
-              name="aniversario"
-              placeholder="dd/mm"
-              maxLength={5}
-              className="input-base"
-            />
+            <input name="birthday" placeholder="dd/mm" maxLength={5} className="input-base" />
           </div>
-
           <div>
             <label className="block text-[11px] font-body text-muted tracking-[1px] uppercase mb-2">
               Etiquetas
             </label>
             <div className="flex gap-2 flex-wrap">
-              {etiquetasDisponiveis.map((et) => {
-                const ativo = etiquetas.includes(et)
-                const s = etiquetaStyles[et]
+              {availableTags.map((tag) => {
+                const active = tags.includes(tag)
+                const s = tagStyles[tag]
                 return (
                   <button
-                    key={et}
+                    key={tag}
                     type="button"
-                    onClick={() => toggleEtiqueta(et)}
+                    onClick={() => toggleTag(tag)}
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-body cursor-pointer transition-all"
                     style={
-                      ativo
+                      active
                         ? { backgroundColor: s.bg, color: s.color, border: `1.5px solid ${s.border}` }
                         : { backgroundColor: '#FFFFFF', color: '#7A6E8A', border: '1px solid #EEE4D5' }
                     }
                   >
-                    {ativo && <Check size={10} />}
-                    {et}
+                    {active && <Check size={10} />}
+                    {tag}
                   </button>
                 )
               })}
             </div>
           </div>
-
-          {/* Footer */}
           <div className="flex gap-3 pt-1">
             <button
               type="button"

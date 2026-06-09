@@ -1,108 +1,108 @@
-import type { Compradora, Venda, DoacaoDinheiro } from '@/types'
+import type { Customer, Sale, DonationCash } from '@/types'
 
-// Módulo cacheado pelo Node.js — estado persiste entre requests (reseta ao reiniciar o servidor)
+// Node module cache — state persists between requests (resets on server restart)
 
-const _compradoras: Compradora[] = [
+const _customers: Customer[] = [
   {
     id: '1',
-    nome: 'Beyoncé Santos',
-    tel: '(51) 99555-5555',
-    etiquetas: ['paciente', 'brechó'],
-    aniversario: '12/03',
-    desde: 2024,
-    totalCompras: 8,
-    valorTotal: 485,
-    ultimaCompra: '06/05/2026',
+    name: 'Beyoncé Santos',
+    phone: '(51) 99555-5555',
+    tags: ['paciente', 'brechó'],
+    birthday: '12/03',
+    member_since: 2024,
+    purchase_count: 8,
+    total_spent: 485,
+    last_purchase_at: '06/05/2026',
   },
   {
     id: '2',
-    nome: 'Shakira Oliveira',
-    tel: '(51) 96666-6666',
-    etiquetas: ['familiar'],
-    aniversario: '02/09',
-    desde: 2023,
-    totalCompras: 6,
-    valorTotal: 280,
-    ultimaCompra: '28/04/2026',
+    name: 'Shakira Oliveira',
+    phone: '(51) 96666-6666',
+    tags: ['familiar'],
+    birthday: '02/09',
+    member_since: 2023,
+    purchase_count: 6,
+    total_spent: 280,
+    last_purchase_at: '28/04/2026',
   },
   {
     id: '3',
-    nome: 'Alberta Costa',
-    tel: '(51) 92222-2222',
-    etiquetas: ['voluntária', 'brechó'],
-    aniversario: '24/07',
-    desde: 2022,
-    totalCompras: 5,
-    valorTotal: 340,
-    ultimaCompra: '02/05/2026',
+    name: 'Alberta Costa',
+    phone: '(51) 92222-2222',
+    tags: ['voluntária', 'brechó'],
+    birthday: '24/07',
+    member_since: 2022,
+    purchase_count: 5,
+    total_spent: 340,
+    last_purchase_at: '02/05/2026',
   },
   {
     id: '4',
-    nome: 'Maira Fernandes',
-    tel: '(51) 93333-3333',
-    etiquetas: ['paciente', 'tampinha'],
-    aniversario: '15/11',
-    desde: 2025,
-    totalCompras: 7,
-    valorTotal: 410,
-    ultimaCompra: '10/05/2026',
+    name: 'Maira Fernandes',
+    phone: '(51) 93333-3333',
+    tags: ['paciente', 'tampinha'],
+    birthday: '15/11',
+    member_since: 2025,
+    purchase_count: 7,
+    total_spent: 410,
+    last_purchase_at: '10/05/2026',
   },
 ]
 
-const hoje = new Date().toISOString()
+const now = new Date().toISOString()
 
-const _vendas: Venda[] = [
+const _sales: Sale[] = [
   {
     id: 'v01',
-    hora: '09:42',
-    compradora_id: '4',
-    compradora_nome: 'Maira Fernandes',
-    categoria: '3 peças (blusas)',
-    valor: 45,
-    liquido: 45,
-    pagamento: 'pix',
-    banco: 'PIX TON',
-    conferido: true,
-    created_at: hoje,
+    time: '09:42',
+    customer_id: '4',
+    customer_name: 'Maira Fernandes',
+    category: '3 peças (blusas)',
+    amount: 45,
+    net_amount: 45,
+    payment_method: 'pix',
+    bank: 'PIX TON',
+    confirmed: true,
+    created_at: now,
   },
   {
     id: 'v02',
-    hora: '10:15',
-    compradora_id: '1',
-    compradora_nome: 'Beyoncé Santos',
-    categoria: 'vestido + saia',
-    valor: 90,
-    liquido: 88.41,
-    pagamento: 'credito',
-    banco: 'SICREDI',
-    parcelas: 2,
-    conferido: false,
-    created_at: hoje,
+    time: '10:15',
+    customer_id: '1',
+    customer_name: 'Beyoncé Santos',
+    category: 'vestido + saia',
+    amount: 90,
+    net_amount: 88.41,
+    payment_method: 'credito',
+    bank: 'SICREDI',
+    installments: 2,
+    confirmed: false,
+    created_at: now,
   },
   {
     id: 'v03',
-    hora: '11:30',
-    compradora_id: null,
-    compradora_nome: 'Cliente avulso',
-    categoria: '1 jaqueta',
-    valor: 35,
-    liquido: 35,
-    pagamento: 'dinheiro',
-    conferido: true,
-    created_at: hoje,
+    time: '11:30',
+    customer_id: null,
+    customer_name: 'Cliente avulso',
+    category: '1 jaqueta',
+    amount: 35,
+    net_amount: 35,
+    payment_method: 'dinheiro',
+    confirmed: true,
+    created_at: now,
   },
   {
     id: 'v04',
-    hora: '14:08',
-    compradora_id: '3',
-    compradora_nome: 'Alberta Costa',
-    categoria: '5 peças',
-    valor: 70,
-    liquido: 68.7,
-    pagamento: 'debito',
-    banco: 'SICREDI',
-    conferido: false,
-    created_at: hoje,
+    time: '14:08',
+    customer_id: '3',
+    customer_name: 'Alberta Costa',
+    category: '5 peças',
+    amount: 70,
+    net_amount: 68.7,
+    payment_method: 'debito',
+    bank: 'SICREDI',
+    confirmed: false,
+    created_at: now,
   },
 ]
 
@@ -112,134 +112,132 @@ function nextId(): string {
   return String(++_nextId)
 }
 
-// Calcula líquido estimado baseado na forma de pagamento
-function calcularLiquido(valor: number, pagamento: string): number {
-  if (pagamento === 'credito') return parseFloat((valor * 0.98).toFixed(2))
-  if (pagamento === 'debito') return parseFloat((valor * 0.982).toFixed(2))
-  return valor
+function calcNetAmount(amount: number, payment_method: string): number {
+  if (payment_method === 'credito') return parseFloat((amount * 0.98).toFixed(2))
+  if (payment_method === 'debito') return parseFloat((amount * 0.982).toFixed(2))
+  return amount
 }
 
-export function getCompradoras(): Compradora[] {
-  return [..._compradoras].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
+export function getCustomers(): Customer[] {
+  return [..._customers].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
 }
 
-export function getVendasHoje(): Venda[] {
+export function getTodaySales(): Sale[] {
   const today = new Date().toDateString()
-  return _vendas
+  return _sales
     .filter((v) => new Date(v.created_at).toDateString() === today)
-    .sort((a, b) => a.hora.localeCompare(b.hora))
+    .sort((a, b) => a.time.localeCompare(b.time))
 }
 
-export function getAllVendas(): Venda[] {
-  return [..._vendas].sort(
+export function getAllSales(): Sale[] {
+  return [..._sales].sort(
     (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   )
 }
 
-export function addCompradora(
-  dados: Omit<Compradora, 'id' | 'totalCompras' | 'valorTotal' | 'ultimaCompra'>
-): Compradora {
-  const nova: Compradora = {
-    ...dados,
+export function addCustomer(
+  data: Omit<Customer, 'id' | 'purchase_count' | 'total_spent' | 'last_purchase_at'>
+): Customer {
+  const customer: Customer = {
+    ...data,
     id: nextId(),
-    totalCompras: 0,
-    valorTotal: 0,
-    ultimaCompra: '',
+    purchase_count: 0,
+    total_spent: 0,
+    last_purchase_at: '',
   }
-  _compradoras.push(nova)
-  return nova
+  _customers.push(customer)
+  return customer
 }
 
-export function addVenda(
-  dados: Omit<Venda, 'id' | 'created_at' | 'liquido' | 'hora'> & { data_venda?: string }
-): Venda {
-  const agora = dados.data_venda ? new Date(dados.data_venda) : new Date()
-  const hora = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-  const { data_venda: _, ...rest } = dados
-  const nova: Venda = {
+export function addSale(
+  data: Omit<Sale, 'id' | 'created_at' | 'net_amount' | 'time'> & { sold_at?: string }
+): Sale {
+  const date = data.sold_at ? new Date(data.sold_at) : new Date()
+  const time = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+  const { sold_at: _, ...rest } = data
+  const sale: Sale = {
     ...rest,
     id: `v${nextId()}`,
-    hora,
-    liquido: calcularLiquido(dados.valor, dados.pagamento),
-    created_at: agora.toISOString(),
+    time,
+    net_amount: calcNetAmount(data.amount, data.payment_method),
+    created_at: date.toISOString(),
   }
-  _vendas.push(nova)
+  _sales.push(sale)
 
-  // Atualiza stats da compradora
-  if (dados.compradora_id) {
-    const comp = _compradoras.find((c) => c.id === dados.compradora_id)
-    if (comp) {
-      comp.totalCompras += 1
-      comp.valorTotal += dados.valor
-      comp.ultimaCompra = new Date().toLocaleDateString('pt-BR')
+  if (data.customer_id) {
+    const customer = _customers.find((c) => c.id === data.customer_id)
+    if (customer) {
+      customer.purchase_count += 1
+      customer.total_spent += data.amount
+      customer.last_purchase_at = new Date().toLocaleDateString('pt-BR')
     }
   }
 
-  return nova
+  return sale
 }
 
-export function marcarConferido(id: string): void {
-  const venda = _vendas.find((v) => v.id === id)
-  if (venda) venda.conferido = true
+export function confirmSale(id: string): void {
+  const sale = _sales.find((v) => v.id === id)
+  if (sale) sale.confirmed = true
 }
 
-export function atualizarEtiquetasStore(id: string, etiquetas: string[]): void {
-  const comp = _compradoras.find((c) => c.id === id)
-  if (comp) comp.etiquetas = etiquetas
+export function updateCustomerTagsStore(id: string, tags: string[]): void {
+  const customer = _customers.find((c) => c.id === id)
+  if (customer) customer.tags = tags
 }
 
 // ────────────────────────────────────────────────────────────
-// Doações em dinheiro
+// Cash donations
 // ────────────────────────────────────────────────────────────
 
-const _doacoes: DoacaoDinheiro[] = [
+const _donations: DonationCash[] = [
   {
     id: 'd01',
-    data_doacao: '2026-05-05T00:00:00.000Z',
-    doador_nome: 'Cláudia Mendes',
-    doador_tel: '(51) 98111-2233',
-    valor: 100,
-    origem: 'PIX',
-    frequencia: 'mensal',
-    observacoes: 'Doa todo mês desde jan/2025',
+    donated_at: '2026-05-05T00:00:00.000Z',
+    donor_name: 'Cláudia Mendes',
+    donor_phone: '(51) 98111-2233',
+    amount: 100,
+    origin: 'PIX',
+    frequency: 'monthly',
+    notes: 'Doa todo mês desde jan/2025',
     created_at: '2026-05-05T00:00:00.000Z',
   },
   {
     id: 'd02',
-    data_doacao: '2026-05-12T00:00:00.000Z',
-    doador_nome: 'Roberto Faria',
-    doador_tel: '(51) 97555-8844',
-    valor: 250,
-    origem: 'Dinheiro',
-    frequencia: 'pontual',
+    donated_at: '2026-05-12T00:00:00.000Z',
+    donor_name: 'Roberto Faria',
+    donor_phone: '(51) 97555-8844',
+    amount: 250,
+    origin: 'Dinheiro',
+    frequency: 'one_time',
     created_at: '2026-05-12T00:00:00.000Z',
   },
   {
     id: 'd03',
-    data_doacao: '2026-05-20T00:00:00.000Z',
-    doador_nome: 'Beatriz Teixeira',
-    doador_tel: '(51) 99444-7766',
-    valor: 50,
-    origem: 'PIX',
-    frequencia: 'mensal',
+    donated_at: '2026-05-20T00:00:00.000Z',
+    donor_name: 'Beatriz Teixeira',
+    donor_phone: '(51) 99444-7766',
+    amount: 50,
+    origin: 'PIX',
+    frequency: 'monthly',
     created_at: '2026-05-20T00:00:00.000Z',
   },
 ]
 
-export function getDoacoes(): DoacaoDinheiro[] {
-  return [..._doacoes].sort(
-    (a, b) => new Date(b.data_doacao).getTime() - new Date(a.data_doacao).getTime()
+export function getDonations(): DonationCash[] {
+  return [..._donations].sort(
+    (a, b) => new Date(b.donated_at).getTime() - new Date(a.donated_at).getTime()
   )
 }
 
-export function addDoacao(
-  dados: Omit<DoacaoDinheiro, 'id' | 'created_at'>
-): DoacaoDinheiro {
-  const nova: DoacaoDinheiro = {
-    ...dados,
+export function addDonation(
+  data: Omit<DonationCash, 'id' | 'created_at'>
+): DonationCash {
+  const donation: DonationCash = {
+    ...data,
     id: `d${nextId()}`,
     created_at: new Date().toISOString(),
   }
-  _doacoes.push(nova)
-  return nova
+  _donations.push(donation)
+  return donation
 }

@@ -1,12 +1,12 @@
 import { ChevronLeft } from 'lucide-react'
 import Link from 'next/link'
-import { NovaVendaForm } from '@/components/brecho/nova-venda-form'
-import { getCompradoras } from '@/lib/store'
+import { NewSaleForm } from '@/components/shop/new-sale-form'
+import { getCustomers } from '@/lib/store'
 
 export const dynamic = 'force-dynamic'
 
 export default function NovaVendaPage() {
-  const compradoras = getCompradoras()
+  const customers = getCustomers()
 
   return (
     <div className="px-4 py-6 md:px-14 md:py-10 max-w-[1000px]">
@@ -27,7 +27,7 @@ export default function NovaVendaPage() {
         <span className="text-accent">*</span> são obrigatórios.
       </p>
 
-      <NovaVendaForm compradoras={compradoras} />
+      <NewSaleForm customers={customers} />
     </div>
   )
 }

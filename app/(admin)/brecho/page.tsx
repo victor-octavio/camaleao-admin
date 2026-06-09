@@ -2,38 +2,37 @@ import { Plus, Sparkles, Cake } from 'lucide-react'
 import Link from 'next/link'
 import { Card } from '@/components/ui/card'
 import { StatNumber } from '@/components/ui/stat-number'
-import { VendasDoDia } from '@/components/brecho/vendas-do-dia'
-import { getVendasHoje } from '@/lib/store'
+import { SalesToday } from '@/components/shop/sales-today'
+import { getTodaySales } from '@/lib/store'
 
 export const dynamic = 'force-dynamic'
 
 export default function BrechoDashboard() {
-  const vendas = getVendasHoje()
-  const totalDia = vendas.reduce((s, v) => s + v.valor, 0)
+  const sales = getTodaySales()
+  const totalToday = sales.reduce((s, v) => s + v.amount, 0)
 
   const now = new Date()
-  const hora = now.getHours()
-  const saudacao = hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite'
+  const hour = now.getHours()
+  const greeting = hour < 12 ? 'Bom dia' : hour < 18 ? 'Boa tarde' : 'Boa noite'
+
+  const birthdaysMock = [
+    { name: 'Beyoncé Santos', day: '12/03' },
+    { name: 'Roberta Lima', day: '18/05' },
+  ]
 
   return (
     <div className="px-4 py-6 md:px-14 md:py-10 max-w-[1200px]">
-      {/* Header editorial */}
       <header className="mb-8 md:mb-12 flex flex-col gap-4 md:flex-row md:justify-between md:items-end">
         <div>
           <div className="text-xs text-muted font-body tracking-[2px] uppercase mb-2">
-            {now.toLocaleDateString('pt-BR', {
-              weekday: 'long',
-              day: 'numeric',
-              month: 'long',
-            })}
+            {now.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}
           </div>
           <h1 className="font-display text-[32px] md:text-[48px] text-ink font-semibold tracking-[-1px] md:tracking-[-1.5px] m-0 leading-[1.05]">
-            {saudacao},{' '}
+            {greeting},{' '}
             <span className="text-accent-deep">Ana</span>.
           </h1>
           <p className="font-body text-muted text-[14px] md:text-[15px] mt-3 max-w-[480px]">
-            Cada peça que sai daqui vira atendimento, escuta e cuidado. Obrigada
-            por estar aqui hoje.
+            Cada peça que sai daqui vira atendimento, escuta e cuidado. Obrigada por estar aqui hoje.
           </p>
         </div>
         <Link href="/brecho/nova-venda" className="btn-primary self-start md:self-auto">
@@ -41,18 +40,12 @@ export default function BrechoDashboard() {
         </Link>
       </header>
 
-      {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 md:mb-10">
         <Card>
-          <StatNumber
-            value={`R$ ${totalDia.toFixed(2)}`}
-            label="Vendas hoje"
-            accentClass="text-accent"
-            trend="+18% vs ontem"
-          />
+          <StatNumber value={`R$ ${totalToday.toFixed(2)}`} label="Vendas hoje" accentClass="text-accent" trend="+18% vs ontem" />
         </Card>
         <Card>
-          <StatNumber value={String(vendas.length)} label="Atendimentos hoje" />
+          <StatNumber value={String(sales.length)} label="Atendimentos hoje" />
         </Card>
         <Card>
           <StatNumber value="R$ 1.842" label="Esta semana" />
@@ -62,40 +55,30 @@ export default function BrechoDashboard() {
         </Card>
       </div>
 
-      {/* Duas colunas */}
       <div className="grid gap-4 grid-cols-1 md:grid-cols-[1.4fr_1fr]">
-        <VendasDoDia vendas={vendas} />
+        <SalesToday sales={sales} />
 
         <div className="flex flex-col gap-4">
-          {/* Card insight */}
           <div
             className="rounded-[16px] p-6"
-            style={{
-              background: 'linear-gradient(135deg, #E89E5C 0%, #D87560 100%)',
-              color: '#FFFFFF',
-            }}
+            style={{ background: 'linear-gradient(135deg, #E89E5C 0%, #D87560 100%)', color: '#FFFFFF' }}
           >
             <Sparkles size={20} className="mb-3" />
             <div className="font-display text-[22px] leading-tight font-semibold mb-2 tracking-[-0.3px]">
               Beyoncé voltou pela 8ª vez.
             </div>
             <div className="font-body text-[13px] opacity-95 leading-relaxed">
-              Que tal mandar um agradecimento personalizado? Já são R$ 485 em
-              apoio desde 2024.
+              Que tal mandar um agradecimento personalizado? Já são R$ 485 em apoio desde 2024.
             </div>
             <Link
               href="/brecho/compradoras"
               className="inline-block mt-4 px-3.5 py-2 rounded-[8px] text-xs font-body font-medium text-white no-underline"
-              style={{
-                backgroundColor: 'rgba(255,255,255,0.2)',
-                border: '1px solid rgba(255,255,255,0.4)',
-              }}
+              style={{ backgroundColor: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.4)' }}
             >
               Ver compradora →
             </Link>
           </div>
 
-          {/* Aniversariantes */}
           <Card>
             <div className="flex items-center gap-2 mb-3.5">
               <Cake size={16} className="text-coral" />
@@ -104,13 +87,10 @@ export default function BrechoDashboard() {
               </h4>
             </div>
             <div className="flex flex-col gap-2.5">
-              {[
-                { nome: 'Beyoncé Santos', dia: '12/03' },
-                { nome: 'Roberta Lima', dia: '18/05' },
-              ].map((p, i) => (
+              {birthdaysMock.map((p, i) => (
                 <div key={i} className="flex justify-between items-center">
-                  <span className="font-body text-sm text-ink">{p.nome}</span>
-                  <span className="font-mono text-xs text-muted">{p.dia}</span>
+                  <span className="font-body text-sm text-ink">{p.name}</span>
+                  <span className="font-mono text-xs text-muted">{p.day}</span>
                 </div>
               ))}
             </div>

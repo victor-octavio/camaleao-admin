@@ -1,10 +1,10 @@
-import { FinanceiroTable } from '@/components/brecho/financeiro-table'
-import { getAllVendas } from '@/lib/store'
+import { FinancialsTable } from '@/components/shop/financials-table'
+import { getAllSales } from '@/lib/store'
 
 export const dynamic = 'force-dynamic'
 
 export default function FinanceiroPage() {
-  const vendas = getAllVendas()
+  const sales = getAllSales()
 
   return (
     <div className="px-4 py-6 md:px-14 md:py-10 max-w-[1300px]">
@@ -17,7 +17,7 @@ export default function FinanceiroPage() {
           <span className="text-emerald">valores recebidos</span>
         </h1>
       </header>
-      <FinanceiroTable vendas={vendas} />
+      <FinancialsTable sales={sales} />
     </div>
   )
 }

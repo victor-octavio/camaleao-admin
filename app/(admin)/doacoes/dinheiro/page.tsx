@@ -1,12 +1,12 @@
 import Link from 'next/link'
 import { Plus } from 'lucide-react'
-import { getDoacoes } from '@/lib/store'
-import { DoacoesList } from '@/components/doacoes/doacoes-list'
+import { getDonations } from '@/lib/store'
+import { DonationsList } from '@/components/donations/donations-list'
 
 export const dynamic = 'force-dynamic'
 
 export default function DoacoesDinheiroPage() {
-  const doacoes = getDoacoes()
+  const donations = getDonations()
 
   return (
     <div className="px-4 py-6 md:px-14 md:py-10 max-w-[1300px]">
@@ -27,7 +27,7 @@ export default function DoacoesDinheiroPage() {
           <Plus size={15} /> Nova doação
         </Link>
       </header>
-      <DoacoesList doacoes={doacoes} />
+      <DonationsList donations={donations} />
     </div>
   )
 }
