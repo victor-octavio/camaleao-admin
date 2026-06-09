@@ -23,7 +23,7 @@ export async function getTodaySales(): Promise<Sale[]> {
     .gte('sold_at', today.toISOString())
     .order('sold_at')
 
-  if (error) throw new Error(error.message)
+  if (error) { console.error('getTodaySales error:', error); throw new Error(error.message) }
   return (data ?? []) as Sale[]
 }
 
