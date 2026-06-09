@@ -7,8 +7,8 @@ import { getTodaySales } from '@/lib/store'
 
 export const dynamic = 'force-dynamic'
 
-export default function BrechoDashboard() {
-  const sales = getTodaySales()
+export default async function BrechoDashboard() {
+  const sales = await getTodaySales()
   const totalToday = sales.reduce((s, v) => s + v.amount, 0)
 
   const now = new Date()

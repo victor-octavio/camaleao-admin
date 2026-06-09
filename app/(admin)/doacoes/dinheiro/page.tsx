@@ -5,8 +5,8 @@ import { DonationsList } from '@/components/donations/donations-list'
 
 export const dynamic = 'force-dynamic'
 
-export default function DoacoesDinheiroPage() {
-  const donations = getDonations()
+export default async function DoacoesDinheiroPage() {
+  const donations = await getDonations()
 
   return (
     <div className="px-4 py-6 md:px-14 md:py-10 max-w-[1300px]">

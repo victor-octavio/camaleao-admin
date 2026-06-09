@@ -3,8 +3,8 @@ import { getAllSales } from '@/lib/store'
 
 export const dynamic = 'force-dynamic'
 
-export default function FinanceiroPage() {
-  const sales = getAllSales()
+export default async function FinanceiroPage() {
+  const sales = await getAllSales()
 
   return (
     <div className="px-4 py-6 md:px-14 md:py-10 max-w-[1300px]">
