@@ -1,8 +1,8 @@
 'use server'
 
-import { addCustomer, updateCustomerTagsStore } from '@/lib/store'
+import { addCustomer, updateCustomerTagsStore, getCustomerSalesHistory } from '@/lib/store'
 import { revalidatePath } from 'next/cache'
-import type { Customer } from '@/types'
+import type { Customer, Sale } from '@/types'
 
 export async function createCustomer(formData: FormData): Promise<Customer> {
   const tagsRaw = formData.get('tags') as string
@@ -25,4 +25,8 @@ export async function createCustomer(formData: FormData): Promise<Customer> {
 export async function updateCustomerTags(id: string, tags: string[]) {
   await updateCustomerTagsStore(id, tags)
   revalidatePath('/brecho/compradoras')
+}
+
+export async function fetchCustomerSales(customerId: string): Promise<Sale[]> {
+  return getCustomerSalesHistory(customerId)
 }

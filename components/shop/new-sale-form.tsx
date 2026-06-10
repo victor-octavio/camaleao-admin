@@ -2,25 +2,41 @@
 
 import { useState, useTransition } from 'react'
 import { Plus, X, Check, Search, Smartphone, Banknote, CreditCard } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { Tag } from '@/components/ui/tag'
 import { NewCustomerModal } from '@/components/shop/new-customer-modal'
 import { registerSale } from '@/actions/sales'
 import type { Customer } from '@/types'
 
+interface PaymentMethod { id: string; name: string; label: string }
+interface Bank { id: string; name: string; type: string }
+interface DbTag { id: string; name: string; color: string; bg_color: string }
+
 interface NewSaleFormProps {
   customers: Customer[]
+  paymentMethods: PaymentMethod[]
+  banks: Bank[]
+  tags: DbTag[]
 }
 
-const paymentMethods = [
-  { id: 'pix',      label: 'PIX',      icon: Smartphone, color: '#5C8A6E' },
-  { id: 'dinheiro', label: 'Dinheiro', icon: Banknote,   color: '#E89E5C' },
-  { id: 'debito',   label: 'Débito',   icon: CreditCard, color: '#4B3A9B' },
-  { id: 'credito',  label: 'Crédito',  icon: CreditCard, color: '#D87560' },
-]
+const PM_META: Record<string, { icon: LucideIcon; color: string }> = {
+  pix:    { icon: Smartphone, color: '#5C8A6E' },
+  cash:   { icon: Banknote,   color: '#E89E5C' },
+  debit:  { icon: CreditCard, color: '#4B3A9B' },
+  credit: { icon: CreditCard, color: '#D87560' },
+}
+const DEFAULT_META = { icon: CreditCard, color: '#7A6E8A' }
 
-export function NewSaleForm({ customers: initial }: NewSaleFormProps) {
+export function NewSaleForm({ customers: initial, paymentMethods, banks, tags }: NewSaleFormProps) {
+  const pixBanks  = banks.filter(b => b.type === 'pix')
+  const cardBanks = banks.filter(b => b.type === 'card')
+
+  const defaultPm = paymentMethods[0]?.name ?? 'pix'
+
   const [customerList, setCustomerList] = useState<Customer[]>(initial)
-  const [paymentMethod, setPaymentMethod] = useState('pix')
+  const [paymentMethod, setPaymentMethod] = useState(defaultPm)
+  const [bank, setBank] = useState(pixBanks[0]?.name ?? '')
+  const [installments, setInstallments] = useState(1)
   const [items, setItems] = useState([{ category: '', amount: '' }])
   const [saleDate, setSaleDate] = useState(new Date().toISOString().split('T')[0])
   const [search, setSearch] = useState('')
@@ -36,6 +52,13 @@ export function NewSaleForm({ customers: initial }: NewSaleFormProps) {
       c.name.toLowerCase().includes(search.toLowerCase()) ||
       c.phone.includes(search)
   )
+
+  function handlePaymentMethodChange(name: string) {
+    setPaymentMethod(name)
+    if (name === 'pix') setBank(pixBanks[0]?.name ?? '')
+    else if (name === 'credit' || name === 'debit') setBank(cardBanks[0]?.name ?? '')
+    else setBank('')
+  }
 
   function selectCustomer(c: Customer) {
     setSelectedCustomer(c)
@@ -66,13 +89,20 @@ export function NewSaleForm({ customers: initial }: NewSaleFormProps) {
     fd.set('items', JSON.stringify(items.map((p) => ({ ...p, amount: parseFloat(p.amount) || 0 }))))
     fd.set('payment_method', paymentMethod)
     fd.set('sold_at', saleDate)
+    if (bank) fd.set('bank', bank)
+    if (paymentMethod === 'credit') fd.set('installments', String(installments))
     startTransition(async () => { await registerSale(fd) })
   }
+
+  const visibleBanks =
+    paymentMethod === 'pix' ? pixBanks :
+    paymentMethod === 'credit' || paymentMethod === 'debit' ? cardBanks : []
 
   return (
     <>
       {showModal && (
         <NewCustomerModal
+          tags={tags}
           onClose={() => setShowModal(false)}
           onCreated={handleCustomerCreated}
         />
@@ -211,49 +241,57 @@ export function NewSaleForm({ customers: initial }: NewSaleFormProps) {
               Forma de pagamento <span className="text-accent">*</span>
             </label>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
-              {paymentMethods.map(({ id, label, icon: Icon, color }) => {
-                const active = paymentMethod === id
+              {paymentMethods.map((pm) => {
+                const meta = PM_META[pm.name] ?? DEFAULT_META
+                const Icon = meta.icon
+                const active = paymentMethod === pm.name
                 return (
                   <button
-                    key={id}
+                    key={pm.id}
                     type="button"
-                    onClick={() => setPaymentMethod(id)}
+                    onClick={() => handlePaymentMethodChange(pm.name)}
                     className="p-4 rounded-[12px] flex flex-col items-center gap-2 cursor-pointer transition-all font-body"
-                    style={active ? { border: `2px solid ${color}`, backgroundColor: `${color}15` } : { border: '1px solid #EEE4D5', backgroundColor: '#FFFFFF' }}
+                    style={active
+                      ? { border: `2px solid ${meta.color}`, backgroundColor: `${meta.color}15` }
+                      : { border: '1px solid #EEE4D5', backgroundColor: '#FFFFFF' }}
                   >
-                    <Icon size={20} color={active ? color : '#7A6E8A'} strokeWidth={1.5} />
-                    <span className={`text-[13px] ${active ? 'text-ink font-medium' : 'text-muted'}`}>{label}</span>
+                    <Icon size={20} color={active ? meta.color : '#7A6E8A'} strokeWidth={1.5} />
+                    <span className={`text-[13px] ${active ? 'text-ink font-medium' : 'text-muted'}`}>{pm.label}</span>
                   </button>
                 )
               })}
             </div>
 
-            {paymentMethod === 'credito' && (
-              <div className="mt-4 grid grid-cols-2 gap-2.5">
+            {visibleBanks.length > 0 && (
+              <div className="mt-4 grid gap-2.5" style={{ gridTemplateColumns: paymentMethod === 'credit' ? '1fr 1fr' : '1fr' }}>
                 <div>
-                  <label className="block text-[11px] font-body text-muted tracking-[1px] uppercase mb-1.5">Banco / maquininha</label>
-                  <select name="bank" className="input-base">
-                    <option>SICREDI</option>
-                    <option>PagSeguro</option>
-                    <option>Stone</option>
+                  <label className="block text-[11px] font-body text-muted tracking-[1px] uppercase mb-1.5">
+                    Banco / maquininha
+                  </label>
+                  <select
+                    value={bank}
+                    onChange={(e) => setBank(e.target.value)}
+                    className="input-base"
+                  >
+                    {visibleBanks.map((b) => (
+                      <option key={b.id} value={b.name}>{b.name}</option>
+                    ))}
                   </select>
                 </div>
-                <div>
-                  <label className="block text-[11px] font-body text-muted tracking-[1px] uppercase mb-1.5">Parcelas</label>
-                  <select name="installments" className="input-base">
-                    {[1, 2, 3, 4, 5, 6].map((n) => <option key={n}>{n}x</option>)}
-                  </select>
-                </div>
-              </div>
-            )}
-
-            {paymentMethod === 'pix' && (
-              <div className="mt-4">
-                <label className="block text-[11px] font-body text-muted tracking-[1px] uppercase mb-1.5">Banco</label>
-                <select name="bank" className="input-base">
-                  <option>PIX TON</option>
-                  <option>PIX SICREDI</option>
-                </select>
+                {paymentMethod === 'credit' && (
+                  <div>
+                    <label className="block text-[11px] font-body text-muted tracking-[1px] uppercase mb-1.5">
+                      Parcelas
+                    </label>
+                    <select
+                      value={installments}
+                      onChange={(e) => setInstallments(Number(e.target.value))}
+                      className="input-base"
+                    >
+                      {[1, 2, 3, 4, 5, 6].map((n) => <option key={n} value={n}>{n}x</option>)}
+                    </select>
+                  </div>
+                )}
               </div>
             )}
           </div>

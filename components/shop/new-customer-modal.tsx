@@ -5,23 +5,16 @@ import { X, Check } from 'lucide-react'
 import { createCustomer } from '@/actions/customers'
 import type { Customer } from '@/types'
 
-const availableTags = ['paciente', 'familiar', 'voluntária', 'brechó', 'tampinha']
-
-const tagStyles: Record<string, { bg: string; color: string; border: string }> = {
-  paciente:   { bg: '#F8DCD2', color: '#D87560', border: '#D87560' },
-  familiar:   { bg: '#E2DCF3', color: '#4B3A9B', border: '#4B3A9B' },
-  voluntária: { bg: '#DCEBE0', color: '#5C8A6E', border: '#5C8A6E' },
-  brechó:     { bg: '#FBE3CA', color: '#C97D3E', border: '#C97D3E' },
-  tampinha:   { bg: '#FDE7E7', color: '#E25A8F', border: '#E25A8F' },
-}
+interface DbTag { id: string; name: string; color: string; bg_color: string }
 
 interface NewCustomerModalProps {
+  tags: DbTag[]
   onClose: () => void
   onCreated: (customer: Customer) => void
 }
 
-export function NewCustomerModal({ onClose, onCreated }: NewCustomerModalProps) {
-  const [tags, setTags] = useState<string[]>([])
+export function NewCustomerModal({ tags, onClose, onCreated }: NewCustomerModalProps) {
+  const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [isPending, startTransition] = useTransition()
   const nameRef = useRef<HTMLInputElement>(null)
 
@@ -34,14 +27,14 @@ export function NewCustomerModal({ onClose, onCreated }: NewCustomerModalProps) 
     return () => window.removeEventListener('keydown', handleKey)
   }, [onClose])
 
-  function toggleTag(tag: string) {
-    setTags((prev) => prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag])
+  function toggleTag(name: string) {
+    setSelectedTags((prev) => prev.includes(name) ? prev.filter((t) => t !== name) : [...prev, name])
   }
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     const fd = new FormData(e.currentTarget)
-    fd.set('tags', JSON.stringify(tags))
+    fd.set('tags', JSON.stringify(selectedTags))
     startTransition(async () => {
       const customer = await createCustomer(fd)
       onCreated(customer)
@@ -96,23 +89,22 @@ export function NewCustomerModal({ onClose, onCreated }: NewCustomerModalProps) 
               Etiquetas
             </label>
             <div className="flex gap-2 flex-wrap">
-              {availableTags.map((tag) => {
-                const active = tags.includes(tag)
-                const s = tagStyles[tag]
+              {tags.map((tag) => {
+                const active = selectedTags.includes(tag.name)
                 return (
                   <button
-                    key={tag}
+                    key={tag.id}
                     type="button"
-                    onClick={() => toggleTag(tag)}
+                    onClick={() => toggleTag(tag.name)}
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-body cursor-pointer transition-all"
                     style={
                       active
-                        ? { backgroundColor: s.bg, color: s.color, border: `1.5px solid ${s.border}` }
+                        ? { backgroundColor: tag.bg_color, color: tag.color, border: `1.5px solid ${tag.color}` }
                         : { backgroundColor: '#FFFFFF', color: '#7A6E8A', border: '1px solid #EEE4D5' }
                     }
                   >
                     {active && <Check size={10} />}
-                    {tag}
+                    {tag.name}
                   </button>
                 )
               })}

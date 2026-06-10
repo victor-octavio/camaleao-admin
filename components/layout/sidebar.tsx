@@ -3,7 +3,10 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useEffect, useState, useTransition } from 'react'
 import { ShoppingBag, TrendingUp, LogOut, X, Heart } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
+import { logout } from '@/actions/auth'
 
 const topNav = [
   { href: '/brecho', label: 'Brechó', icon: ShoppingBag },
@@ -27,10 +30,38 @@ interface SidebarProps {
   onClose?: () => void
 }
 
+interface UserInfo {
+  name: string
+  role: string
+  initial: string
+}
+
 export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname()
   const inBrecho = pathname.startsWith('/brecho')
   const inDoacoes = pathname.startsWith('/doacoes')
+  const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
+  const [isLoggingOut, startLogout] = useTransition()
+
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getUser().then(async ({ data }) => {
+      if (!data.user) return
+      const { data: profile } = await supabase
+        .from('users')
+        .select('name, role')
+        .eq('id', data.user.id)
+        .maybeSingle()
+
+      const name = profile?.name ?? data.user.email?.split('@')[0] ?? 'Usuário'
+      const role = profile?.role === 'admin' ? 'administradora' : profile?.role === 'volunteer' ? 'voluntária' : 'caixa'
+      setUserInfo({ name, role, initial: name[0].toUpperCase() })
+    })
+  }, [])
+
+  function handleLogout() {
+    startLogout(async () => { await logout() })
+  }
 
   return (
     <aside
@@ -125,16 +156,20 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
       {/* Usuário */}
       <div className="border-t border-rule pt-4 flex items-center gap-2.5 px-2">
         <div className="w-8 h-8 rounded-full bg-accent-soft text-accent-deep flex items-center justify-center font-display text-sm font-semibold shrink-0">
-          A
+          {userInfo?.initial ?? '?'}
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-[13px] font-body text-ink font-medium">Ana</div>
-          <div className="text-[11px] font-body text-muted">voluntária · caixa</div>
+          <div className="text-[13px] font-body text-ink font-medium truncate">{userInfo?.name ?? '—'}</div>
+          <div className="text-[11px] font-body text-muted">{userInfo?.role ?? ''}</div>
         </div>
-        <LogOut
-          size={14}
-          className="text-muted cursor-pointer hover:text-ink transition-colors"
-        />
+        <button
+          onClick={handleLogout}
+          disabled={isLoggingOut}
+          title="Sair"
+          className="text-muted hover:text-ink transition-colors disabled:opacity-50"
+        >
+          <LogOut size={14} />
+        </button>
       </div>
     </aside>
   )

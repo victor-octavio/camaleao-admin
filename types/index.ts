@@ -23,6 +23,7 @@ export interface Sale {
   installments?: number
   net_amount?: number
   confirmed: boolean
+  sold_at: string
   created_at: string
 }
 

@@ -1,18 +1,27 @@
+'use client'
+
+import { useEffect, useState } from 'react'
 import { Phone, Cake, Heart, ChevronRight, Edit3, Plus } from 'lucide-react'
 import { Tag } from '@/components/ui/tag'
-import type { Customer } from '@/types'
+import { fetchCustomerSales } from '@/actions/customers'
+import type { Customer, Sale } from '@/types'
 
 interface CustomerProfileProps {
   customer: Customer
 }
 
-const purchaseHistoryMock = [
-  { date: '06/05/2026', category: '3 peças (blusas)', amount: 45 },
-  { date: '22/04/2026', category: '1 vestido', amount: 60 },
-  { date: '10/04/2026', category: '2 calças', amount: 35 },
-]
-
 export function CustomerProfile({ customer }: CustomerProfileProps) {
+  const [sales, setSales] = useState<Sale[]>([])
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    setLoading(true)
+    fetchCustomerSales(customer.id)
+      .then(setSales)
+      .catch(console.error)
+      .finally(() => setLoading(false))
+  }, [customer.id])
+
   return (
     <div className="flex flex-col gap-4">
       <div className="bg-paper border border-rule rounded-[16px] overflow-hidden">
@@ -31,12 +40,16 @@ export function CustomerProfile({ customer }: CustomerProfileProps) {
                   {customer.name}
                 </h2>
                 <div className="flex gap-3.5 text-xs text-muted font-body">
-                  <span className="flex items-center gap-1">
-                    <Phone size={11} /> {customer.phone}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Cake size={11} /> {customer.birthday}
-                  </span>
+                  {customer.phone && (
+                    <span className="flex items-center gap-1">
+                      <Phone size={11} /> {customer.phone}
+                    </span>
+                  )}
+                  {customer.birthday && (
+                    <span className="flex items-center gap-1">
+                      <Cake size={11} /> {customer.birthday}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
@@ -77,7 +90,7 @@ export function CustomerProfile({ customer }: CustomerProfileProps) {
               Total apoiado
             </div>
             <div className="font-display text-[22px] text-accent font-medium">
-              R$ {customer.total_spent}
+              R$ {Number(customer.total_spent).toFixed(2)}
             </div>
           </div>
         </div>
@@ -87,23 +100,35 @@ export function CustomerProfile({ customer }: CustomerProfileProps) {
           <h4 className="text-[11px] text-muted tracking-[1.5px] uppercase font-body mb-3.5">
             Histórico de compras
           </h4>
-          {purchaseHistoryMock.map((h, i) => (
-            <div
-              key={i}
-              className={`flex justify-between items-center py-3 ${
-                i < purchaseHistoryMock.length - 1 ? 'border-b border-rule' : ''
-              }`}
-            >
-              <div>
-                <div className="font-body text-[13px] text-ink">{h.category}</div>
-                <div className="font-mono text-[11px] text-muted mt-0.5">{h.date}</div>
-              </div>
-              <div className="font-display text-[16px] text-ink">R$ {h.amount}</div>
-            </div>
-          ))}
-          <button className="mt-4 w-full py-2.5 rounded-[8px] border border-rule bg-transparent cursor-pointer font-body text-[13px] text-ink hover:bg-bg transition-colors">
-            Ver histórico completo →
-          </button>
+          {loading ? (
+            <div className="text-sm text-muted font-body py-2">Carregando...</div>
+          ) : sales.length === 0 ? (
+            <div className="text-sm text-muted font-body italic py-2">Nenhuma compra registrada.</div>
+          ) : (
+            <>
+              {sales.slice(0, 5).map((s, i) => (
+                <div
+                  key={s.id}
+                  className={`flex justify-between items-center py-3 ${
+                    i < Math.min(sales.length, 5) - 1 ? 'border-b border-rule' : ''
+                  }`}
+                >
+                  <div>
+                    <div className="font-body text-[13px] text-ink">{s.category || 'Venda'}</div>
+                    <div className="font-mono text-[11px] text-muted mt-0.5">
+                      {new Date(s.sold_at).toLocaleDateString('pt-BR')}
+                    </div>
+                  </div>
+                  <div className="font-display text-[16px] text-ink">R$ {Number(s.amount).toFixed(2)}</div>
+                </div>
+              ))}
+              {sales.length > 5 && (
+                <button className="mt-4 w-full py-2.5 rounded-[8px] border border-rule bg-transparent cursor-pointer font-body text-[13px] text-ink hover:bg-bg transition-colors">
+                  Ver histórico completo ({sales.length} compras) →
+                </button>
+              )}
+            </>
+          )}
         </div>
       </div>
 

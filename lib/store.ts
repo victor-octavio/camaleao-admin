@@ -1,6 +1,15 @@
 import { createClient } from '@/lib/supabase/server'
 import type { Customer, Sale, DonationCash } from '@/types'
 
+function round2(n: number) {
+  return Math.round(n * 100) / 100
+}
+
+const MONTH_NAMES = [
+  'Janeiro','Fevereiro','Março','Abril','Maio','Junho',
+  'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro',
+]
+
 export async function getCustomers(): Promise<Customer[]> {
   const supabase = await createClient()
   const { data, error } = await supabase
@@ -93,7 +102,7 @@ export async function addCustomer(
 }
 
 export async function addSale(
-  data: Omit<Sale, 'id' | 'created_at' | 'time' | 'category' | 'amount'> & {
+  data: Omit<Sale, 'id' | 'created_at' | 'time' | 'category' | 'amount' | 'sold_at'> & {
     sold_at?: string
     items: { category_name: string; amount: number }[]
     payment_method_id?: string
@@ -165,6 +174,214 @@ export async function getDonations(): Promise<DonationCash[]> {
 
   if (error) throw new Error(error.message)
   return (data ?? []) as DonationCash[]
+}
+
+export async function getPaymentMethods(): Promise<{ id: string; name: string; label: string }[]> {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('payment_methods')
+    .select('id, name, label')
+    .eq('active', true)
+    .order('name')
+  if (error) throw new Error(error.message)
+  return data ?? []
+}
+
+export async function getBanks(): Promise<{ id: string; name: string; type: string }[]> {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('banks')
+    .select('id, name, type')
+    .eq('active', true)
+    .order('type, name')
+  if (error) throw new Error(error.message)
+  return data ?? []
+}
+
+export async function getTags(): Promise<{ id: string; name: string; color: string; bg_color: string }[]> {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('tags')
+    .select('id, name, color, bg_color')
+    .order('name')
+  if (error) throw new Error(error.message)
+  return data ?? []
+}
+
+export async function getDashboardStats(): Promise<{
+  weekTotal: number
+  monthTotal: number
+  yesterdayTotal: number
+}> {
+  const supabase = await createClient()
+  const now = new Date()
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const yesterday = new Date(today)
+  yesterday.setDate(yesterday.getDate() - 1)
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+  const daysSinceMonday = (today.getDay() + 6) % 7
+  const weekStart = new Date(today)
+  weekStart.setDate(today.getDate() - daysSinceMonday)
+
+  const { data } = await supabase
+    .from('sales_view')
+    .select('amount, sold_at')
+    .gte('sold_at', monthStart.toISOString())
+
+  const rows = data ?? []
+  return {
+    weekTotal: round2(
+      rows.filter(r => new Date(r.sold_at) >= weekStart).reduce((s, r) => s + Number(r.amount), 0)
+    ),
+    monthTotal: round2(rows.reduce((s, r) => s + Number(r.amount), 0)),
+    yesterdayTotal: round2(
+      rows.filter(r => {
+        const d = new Date(r.sold_at)
+        return d >= yesterday && d < today
+      }).reduce((s, r) => s + Number(r.amount), 0)
+    ),
+  }
+}
+
+export async function getBirthdaysThisMonth(): Promise<{ name: string; birthday: string }[]> {
+  const supabase = await createClient()
+  const month = String(new Date().getMonth() + 1).padStart(2, '0')
+  const { data } = await supabase
+    .from('customers_view')
+    .select('name, birthday')
+    .not('birthday', 'eq', '')
+    .not('birthday', 'is', null)
+
+  return (data ?? []).filter(c => {
+    if (!c.birthday) return false
+    const parts = c.birthday.split('/')  // format: dd/mm
+    return parts.length === 2 && parts[1] === month
+  })
+}
+
+export async function getTopCustomerInsight(): Promise<{
+  id: string
+  name: string
+  purchase_count: number
+  total_spent: number
+} | null> {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('customers_view')
+    .select('id, name, purchase_count, total_spent')
+    .gt('purchase_count', 0)
+    .order('purchase_count', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  return data ?? null
+}
+
+export async function getCustomerSalesHistory(customerId: string): Promise<Sale[]> {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('sales_view')
+    .select('*')
+    .eq('customer_id', customerId)
+    .order('sold_at', { ascending: false })
+    .limit(10)
+  if (error) throw new Error(error.message)
+  return (data ?? []) as Sale[]
+}
+
+export async function getReportData(year: number) {
+  const supabase = await createClient()
+  const start = `${year}-01-01`
+  const end   = `${year + 1}-01-01`
+
+  const [
+    { data: salesData },
+    { count: totalCustomers },
+    { data: newCustData },
+  ] = await Promise.all([
+    supabase.from('sales_view')
+      .select('sold_at, amount, net_amount, payment_method, customer_name, customer_id')
+      .gte('sold_at', start)
+      .lt('sold_at', end),
+    supabase.from('customers_view').select('*', { count: 'exact', head: true }),
+    supabase.from('customers_view')
+      .select('created_at')
+      .gte('created_at', start)
+      .lt('created_at', end),
+  ])
+
+  const sales = salesData ?? []
+  const currentMonth = new Date().getMonth() + 1
+
+  const monthData: Record<number, { sales: number; gross: number; net: number; newCustomers: number }> = {}
+  for (const s of sales) {
+    const m = new Date(s.sold_at).getMonth() + 1
+    if (!monthData[m]) monthData[m] = { sales: 0, gross: 0, net: 0, newCustomers: 0 }
+    monthData[m].sales++
+    monthData[m].gross += Number(s.amount)
+    monthData[m].net   += Number(s.net_amount ?? s.amount)
+  }
+  for (const c of newCustData ?? []) {
+    const m = new Date(c.created_at).getMonth() + 1
+    if (!monthData[m]) monthData[m] = { sales: 0, gross: 0, net: 0, newCustomers: 0 }
+    monthData[m].newCustomers++
+  }
+
+  const monthlySales = Array.from({ length: currentMonth }, (_, i) => {
+    const m = i + 1
+    const d = monthData[m] ?? { sales: 0, gross: 0, net: 0, newCustomers: 0 }
+    return {
+      month: MONTH_NAMES[i],
+      sales: d.sales,
+      gross: round2(d.gross),
+      net:   round2(d.net),
+      fees:  round2(d.gross - d.net),
+      newCustomers: d.newCustomers,
+    }
+  })
+
+  const thisMonthSales = sales.filter(s => new Date(s.sold_at).getMonth() + 1 === currentMonth)
+  const pmTotals: Record<string, number> = {}
+  for (const s of thisMonthSales) {
+    const pm = s.payment_method ?? 'outros'
+    pmTotals[pm] = (pmTotals[pm] ?? 0) + Number(s.amount)
+  }
+  const thisMonthTotal = thisMonthSales.reduce((sum, s) => sum + Number(s.amount), 0)
+  const paymentBreakdown = Object.entries(pmTotals)
+    .map(([method, amount]) => ({
+      method,
+      amount: round2(amount),
+      pct: thisMonthTotal > 0 ? Math.round((amount / thisMonthTotal) * 100) : 0,
+    }))
+    .sort((a, b) => b.amount - a.amount)
+
+  const custTotals: Record<string, { amount: number; purchases: number }> = {}
+  for (const s of thisMonthSales) {
+    const name = s.customer_name ?? 'Anônimo'
+    if (name === 'Cliente avulso') continue
+    if (!custTotals[name]) custTotals[name] = { amount: 0, purchases: 0 }
+    custTotals[name].amount   += Number(s.amount)
+    custTotals[name].purchases++
+  }
+  const topCustomers = Object.entries(custTotals)
+    .map(([name, d]) => ({ name, amount: round2(d.amount), purchases: d.purchases }))
+    .sort((a, b) => b.amount - a.amount)
+    .slice(0, 4)
+
+  const totalRevenue = round2(sales.reduce((s, r) => s + Number(r.amount), 0))
+  const totalSales = sales.length
+  const avgMonthly = round2(totalRevenue / Math.max(currentMonth, 1))
+
+  return {
+    monthlySales,
+    paymentBreakdown,
+    topCustomers,
+    yearStats: {
+      totalRevenue,
+      totalSales,
+      totalCustomers: totalCustomers ?? 0,
+      avgMonthly,
+    },
+  }
 }
 
 export async function addDonation(

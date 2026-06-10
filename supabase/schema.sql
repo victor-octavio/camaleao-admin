@@ -403,3 +403,11 @@ insert into cash_origins (name) values
   ('Transferência'),
   ('Site'),
   ('Outro');
+
+-- ─────────────────────────────────────────
+-- USUÁRIO PADRÃO
+-- Execute APÓS criar o usuário no painel Auth do Supabase.
+-- Substitua <UUID_DO_USUARIO> pelo ID gerado no Auth.
+-- ─────────────────────────────────────────
+-- insert into users (id, name, role) values
+--   ('<UUID_DO_USUARIO>', 'Flávia', 'admin');

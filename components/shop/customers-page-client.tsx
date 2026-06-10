@@ -7,11 +7,14 @@ import { CustomerProfile } from '@/components/shop/customer-profile'
 import { NewCustomerModal } from '@/components/shop/new-customer-modal'
 import type { Customer } from '@/types'
 
+interface DbTag { id: string; name: string; color: string; bg_color: string }
+
 interface CustomersPageClientProps {
   customers: Customer[]
+  tags: DbTag[]
 }
 
-export function CustomersPageClient({ customers: initial }: CustomersPageClientProps) {
+export function CustomersPageClient({ customers: initial, tags }: CustomersPageClientProps) {
   const [list, setList] = useState<Customer[]>(initial)
   const [selected, setSelected] = useState<Customer>(initial[0])
   const [showModal, setShowModal] = useState(false)
@@ -26,6 +29,7 @@ export function CustomersPageClient({ customers: initial }: CustomersPageClientP
     <>
       {showModal && (
         <NewCustomerModal
+          tags={tags}
           onClose={() => setShowModal(false)}
           onCreated={handleCustomerCreated}
         />

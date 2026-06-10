@@ -3,22 +3,47 @@ import Link from 'next/link'
 import { Card } from '@/components/ui/card'
 import { StatNumber } from '@/components/ui/stat-number'
 import { SalesToday } from '@/components/shop/sales-today'
-import { getTodaySales } from '@/lib/store'
+import { getTodaySales, getDashboardStats, getBirthdaysThisMonth, getTopCustomerInsight } from '@/lib/store'
+import { createClient } from '@/lib/supabase/server'
 
 export const dynamic = 'force-dynamic'
 
 export default async function BrechoDashboard() {
-  const sales = await getTodaySales()
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  const [sales, stats, birthdays, topCustomer, profile] = await Promise.all([
+    getTodaySales(),
+    getDashboardStats(),
+    getBirthdaysThisMonth(),
+    getTopCustomerInsight(),
+    user
+      ? supabase.from('users').select('name').eq('id', user.id).maybeSingle()
+      : Promise.resolve({ data: null }),
+  ])
+
+  const userName = (profile as { data: { name: string } | null })?.data?.name
+    ?? user?.email?.split('@')[0]
+    ?? 'você'
+
   const totalToday = sales.reduce((s, v) => s + v.amount, 0)
 
   const now = new Date()
   const hour = now.getHours()
   const greeting = hour < 12 ? 'Bom dia' : hour < 18 ? 'Boa tarde' : 'Boa noite'
+  const monthName = now.toLocaleDateString('pt-BR', { month: 'long' })
+  const capitalizedMonth = monthName.charAt(0).toUpperCase() + monthName.slice(1)
 
-  const birthdaysMock = [
-    { name: 'Beyoncé Santos', day: '12/03' },
-    { name: 'Roberta Lima', day: '18/05' },
-  ]
+  const trendPct =
+    stats.yesterdayTotal > 0
+      ? ((totalToday - stats.yesterdayTotal) / stats.yesterdayTotal) * 100
+      : totalToday > 0
+        ? 100
+        : 0
+  const trendLabel =
+    stats.yesterdayTotal > 0 || totalToday > 0
+      ? `${trendPct > 0 ? '+' : ''}${trendPct.toFixed(0)}% vs ontem`
+      : undefined
 
   return (
     <div className="px-4 py-6 md:px-14 md:py-10 max-w-[1200px]">
@@ -29,7 +54,7 @@ export default async function BrechoDashboard() {
           </div>
           <h1 className="font-display text-[32px] md:text-[48px] text-ink font-semibold tracking-[-1px] md:tracking-[-1.5px] m-0 leading-[1.05]">
             {greeting},{' '}
-            <span className="text-accent-deep">Ana</span>.
+            <span className="text-accent-deep">{userName}</span>.
           </h1>
           <p className="font-body text-muted text-[14px] md:text-[15px] mt-3 max-w-[480px]">
             Cada peça que sai daqui vira atendimento, escuta e cuidado. Obrigada por estar aqui hoje.
@@ -42,16 +67,25 @@ export default async function BrechoDashboard() {
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 md:mb-10">
         <Card>
-          <StatNumber value={`R$ ${totalToday.toFixed(2)}`} label="Vendas hoje" accentClass="text-accent" trend="+18% vs ontem" />
+          <StatNumber
+            value={`R$ ${totalToday.toFixed(2)}`}
+            label="Vendas hoje"
+            accentClass="text-accent"
+            trend={trendLabel}
+          />
         </Card>
         <Card>
           <StatNumber value={String(sales.length)} label="Atendimentos hoje" />
         </Card>
         <Card>
-          <StatNumber value="R$ 1.842" label="Esta semana" />
+          <StatNumber value={`R$ ${stats.weekTotal.toFixed(2)}`} label="Esta semana" />
         </Card>
         <Card>
-          <StatNumber value="R$ 6.730" label="Mês de maio" accentClass="text-emerald" />
+          <StatNumber
+            value={`R$ ${stats.monthTotal.toFixed(2)}`}
+            label={`Mês de ${monthName}`}
+            accentClass="text-emerald"
+          />
         </Card>
       </div>
 
@@ -59,42 +93,46 @@ export default async function BrechoDashboard() {
         <SalesToday sales={sales} />
 
         <div className="flex flex-col gap-4">
-          <div
-            className="rounded-[16px] p-6"
-            style={{ background: 'linear-gradient(135deg, #E89E5C 0%, #D87560 100%)', color: '#FFFFFF' }}
-          >
-            <Sparkles size={20} className="mb-3" />
-            <div className="font-display text-[22px] leading-tight font-semibold mb-2 tracking-[-0.3px]">
-              Beyoncé voltou pela 8ª vez.
-            </div>
-            <div className="font-body text-[13px] opacity-95 leading-relaxed">
-              Que tal mandar um agradecimento personalizado? Já são R$ 485 em apoio desde 2024.
-            </div>
-            <Link
-              href="/brecho/compradoras"
-              className="inline-block mt-4 px-3.5 py-2 rounded-[8px] text-xs font-body font-medium text-white no-underline"
-              style={{ backgroundColor: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.4)' }}
+          {topCustomer && (
+            <div
+              className="rounded-[16px] p-6"
+              style={{ background: 'linear-gradient(135deg, #E89E5C 0%, #D87560 100%)', color: '#FFFFFF' }}
             >
-              Ver compradora →
-            </Link>
-          </div>
+              <Sparkles size={20} className="mb-3" />
+              <div className="font-display text-[22px] leading-tight font-semibold mb-2 tracking-[-0.3px]">
+                {topCustomer.name} voltou pela {topCustomer.purchase_count}ª vez.
+              </div>
+              <div className="font-body text-[13px] opacity-95 leading-relaxed">
+                Que tal mandar um agradecimento personalizado? Já são R$ {Number(topCustomer.total_spent).toFixed(2)} em apoio.
+              </div>
+              <Link
+                href="/brecho/compradoras"
+                className="inline-block mt-4 px-3.5 py-2 rounded-[8px] text-xs font-body font-medium text-white no-underline"
+                style={{ backgroundColor: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.4)' }}
+              >
+                Ver compradora →
+              </Link>
+            </div>
+          )}
 
-          <Card>
-            <div className="flex items-center gap-2 mb-3.5">
-              <Cake size={16} className="text-coral" />
-              <h4 className="m-0 font-body text-[11px] text-muted tracking-[1.5px] uppercase">
-                Aniversariantes do mês
-              </h4>
-            </div>
-            <div className="flex flex-col gap-2.5">
-              {birthdaysMock.map((p, i) => (
-                <div key={i} className="flex justify-between items-center">
-                  <span className="font-body text-sm text-ink">{p.name}</span>
-                  <span className="font-mono text-xs text-muted">{p.day}</span>
-                </div>
-              ))}
-            </div>
-          </Card>
+          {birthdays.length > 0 && (
+            <Card>
+              <div className="flex items-center gap-2 mb-3.5">
+                <Cake size={16} className="text-coral" />
+                <h4 className="m-0 font-body text-[11px] text-muted tracking-[1.5px] uppercase">
+                  Aniversariantes de {capitalizedMonth}
+                </h4>
+              </div>
+              <div className="flex flex-col gap-2.5">
+                {birthdays.map((p, i) => (
+                  <div key={i} className="flex justify-between items-center">
+                    <span className="font-body text-sm text-ink">{p.name}</span>
+                    <span className="font-mono text-xs text-muted">{p.birthday}</span>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
         </div>
       </div>
     </div>
